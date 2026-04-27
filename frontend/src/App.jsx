@@ -9,6 +9,8 @@ import Cart from './pages/Cart';
 import Login from './pages/Login';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
+import About from './pages/About';
+import Pricing from './pages/Pricing';
 import NotFound from './pages/NotFound';
 import PrivateRoute from './router/PrivateRoute';
 import './App.css';
@@ -22,6 +24,8 @@ function App() {
         <Route path="/meals" element={<Meals />} />
         <Route path="/meals/:id" element={<MealDetail />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/pricing" element={<Pricing />} />
 
         {/* Protected Routes */}
         <Route element={<PrivateRoute />}>

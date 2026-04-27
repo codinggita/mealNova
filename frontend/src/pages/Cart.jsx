@@ -1,103 +1,182 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { addToCart, removeFromCart, clearCart } from '../features/cart/cartSlice';
 
 const Cart = () => {
-  const [items, setItems] = useState([
-    { id: 1, name: 'Fresh Salmon Fillet', category: 'Seafood', amount: '2 lbs', checked: false },
-    { id: 2, name: 'Asparagus', category: 'Vegetables', amount: '1 bunch', checked: false },
-    { id: 3, name: 'Avocado', category: 'Produce', amount: '3 pieces', checked: true },
-    { id: 4, name: 'Whole Grain Bread', category: 'Bakery', amount: '1 loaf', checked: false },
-    { id: 5, name: 'Free-range Eggs', category: 'Dairy', amount: '1 dozen', checked: false },
-  ]);
+  const dispatch = useDispatch();
+  const { items, total } = useSelector((state) => state.cart);
 
-  const toggleItem = (id) => {
-    setItems(items.map(item => 
-      item.id === id ? { ...item, checked: !item.checked } : item
-    ));
+  const handleIncrease = (item) => {
+    dispatch(addToCart(item));
   };
 
-  const completedCount = items.filter(i => i.checked).length;
-  const progress = items.length === 0 ? 0 : Math.round((completedCount / items.length) * 100);
+  const handleDecrease = (item) => {
+    dispatch(removeFromCart(item.id));
+  };
+
+  const handleClear = () => {
+    if (window.confirm('Clear entire cart?')) {
+      dispatch(clearCart());
+    }
+  };
+
+  if (items.length === 0) {
+    return (
+      <div className="py-8 max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">My Cart</h1>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center">
+          <div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h3>
+          <p className="text-gray-500 mb-8">Browse meals and add them to your cart to get started.</p>
+          <Link
+            to="/meals"
+            className="inline-block px-8 py-3.5 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors shadow-md"
+          >
+            Browse Meals
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const totalCalories = items.reduce((sum, item) => sum + (item.calories * item.quantity), 0);
+  const totalProtein = items.reduce((sum, item) => sum + (item.protein * item.quantity), 0);
 
   return (
     <div className="py-8 max-w-4xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Grocery List</h1>
-          <p className="text-gray-600 mt-1">Generated from your weekly meal planner.</p>
+          <h1 className="text-3xl font-bold text-gray-900">My Cart</h1>
+          <p className="text-gray-500 mt-1">{items.length} item{items.length !== 1 ? 's' : ''} selected</p>
         </div>
-        <div className="flex gap-2">
-          <button className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-          </button>
-          <button className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"></path></svg>
-          </button>
-          <button className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-          </button>
-        </div>
+        <button
+          onClick={handleClear}
+          className="flex items-center gap-2 text-red-500 hover:text-red-700 hover:bg-red-50 px-4 py-2 rounded-xl transition-colors font-medium text-sm border border-red-100"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+          Clear All
+        </button>
       </div>
 
-      {/* Progress Bar */}
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-8">
-        <div className="flex justify-between items-end mb-2">
-          <span className="font-bold text-gray-700">Shopping Progress</span>
-          <span className="text-sm font-bold text-orange-600">{completedCount} of {items.length} items</span>
-        </div>
-        <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-          <div 
-            className="bg-orange-500 h-3 rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Cart Items */}
+        <div className="lg:col-span-2 space-y-4">
+          {items.map((item) => (
+            <div key={item.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
+              {/* Image */}
+              <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 shadow-sm">
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.parentNode.style.background = 'linear-gradient(135deg, #fed7aa, #fb923c)';
+                  }}
+                />
+              </div>
 
-      {/* List */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        {items.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-            </div>
-            <h3 className="text-xl font-medium text-gray-900 mb-1">Your list is empty</h3>
-            <p className="text-gray-500 mb-6">Add meals to your planner to generate a list.</p>
-            <Link to="/planner" className="inline-block px-6 py-2 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors">
-              Go to Planner
-            </Link>
-          </div>
-        ) : (
-          <ul className="divide-y divide-gray-100">
-            {items.map((item) => (
-              <li 
-                key={item.id} 
-                className={`p-4 sm:p-6 hover:bg-gray-50 transition-colors flex items-center gap-4 cursor-pointer ${item.checked ? 'opacity-60 bg-gray-50' : ''}`}
-                onClick={() => toggleItem(item.id)}
-              >
-                <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-colors ${item.checked ? 'bg-orange-500 border-orange-500' : 'border-gray-300'}`}>
-                  {item.checked && <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>}
+              {/* Info */}
+              <div className="flex-grow min-w-0">
+                <div className="flex justify-between items-start">
+                  <h3 className="font-bold text-gray-900 line-clamp-1 pr-2">{item.name}</h3>
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${item.isVeg ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {item.isVeg ? '🟢' : '🔴'}
+                  </span>
                 </div>
-                
-                <div className="flex-grow">
-                  <h4 className={`text-lg font-medium transition-all ${item.checked ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                    {item.name}
-                  </h4>
-                  <div className="flex gap-3 text-sm mt-1">
-                    <span className="text-gray-500">{item.amount}</span>
-                    <span className="text-gray-300">•</span>
-                    <span className="text-orange-600 font-medium">{item.category}</span>
+                <p className="text-xs text-gray-500 mt-0.5">{item.cuisine} • {item.calories} kcal • {item.protein}g protein</p>
+                <div className="flex items-center justify-between mt-3">
+                  {/* Quantity */}
+                  <div className="flex items-center bg-gray-100 rounded-xl">
+                    <button
+                      onClick={() => handleDecrease(item)}
+                      className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-orange-600 font-bold text-lg transition-colors rounded-l-xl"
+                    >
+                      −
+                    </button>
+                    <span className="w-8 text-center font-bold text-gray-900 text-sm">{item.quantity}</span>
+                    <button
+                      onClick={() => handleIncrease(item)}
+                      className="w-8 h-8 flex items-center justify-center text-gray-600 hover:text-orange-600 font-bold text-lg transition-colors rounded-r-xl"
+                    >
+                      +
+                    </button>
                   </div>
                 </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-      
-      <div className="mt-8 text-center">
-        <p className="text-gray-500 text-sm">
-          Forgot something? <Link to="/meals" className="text-orange-600 hover:underline">Browse more meals</Link>
-        </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Order Summary */}
+        <div className="space-y-4">
+          {/* Nutrition Summary */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <h3 className="font-bold text-gray-900 mb-4">Nutrition Summary</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Total Calories</span>
+                <span className="font-bold text-orange-600">🔥 {totalCalories} kcal</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Total Protein</span>
+                <span className="font-bold text-green-600">💪 {totalProtein}g</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-500">Total Items</span>
+                <span className="font-bold text-gray-900">{items.reduce((s, i) => s + i.quantity, 0)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Checkout Card */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <h3 className="font-bold text-gray-900 mb-4">Order Summary</h3>
+            <div className="space-y-2 mb-4">
+              {items.map((item) => (
+                <div key={item.id} className="flex justify-between text-sm text-gray-600">
+                  <span className="line-clamp-1 flex-grow pr-2">{item.name} × {item.quantity}</span>
+                  <span className="font-medium whitespace-nowrap">
+                    {item.calories * item.quantity} kcal
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="border-t border-gray-100 pt-3 mb-5">
+              <div className="flex justify-between font-bold text-gray-900">
+                <span>Total Meals</span>
+                <span className="text-orange-600">{items.reduce((s, i) => s + i.quantity, 0)} servings</span>
+              </div>
+            </div>
+
+            <button className="w-full py-3.5 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition-colors shadow-md hover:scale-[1.02] transform">
+              Proceed to Checkout
+            </button>
+
+            <div className="mt-4 text-center">
+              <Link to="/meals" className="text-orange-600 text-sm hover:underline font-medium">
+                ← Continue Browsing
+              </Link>
+            </div>
+          </div>
+
+          {/* Planner suggestion */}
+          <div className="bg-orange-50 rounded-2xl p-4 border border-orange-100">
+            <p className="text-sm font-bold text-orange-800 mb-1">📅 Plan your week!</p>
+            <p className="text-xs text-orange-600">Add these meals to your weekly planner for easy tracking.</p>
+            <Link to="/planner" className="mt-2 inline-block text-xs text-orange-700 font-bold hover:underline">
+              Go to Planner →
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );
